@@ -6,7 +6,9 @@ function createdata(){
     then
       echo "File not found!"
     else
-      echo "app = MDjango v1" > /$DIR/DB_MDjango/DB_MDjango.py
+      echo "app = 'MDjango v1'" > /$DIR/DB_MDjango/DB_MDjango.py
+      echo "" > /$DIR/DB_MDjango/requirements.py
+      
     fi
   }
   function createFolder() {
@@ -22,10 +24,47 @@ function createdata(){
   createFolder
 }
 
-
+function managerVenv(){
+  function installVenv(){
+    echo "install venv ..."
+    sudo dnf install python3-virtualenv
+  }
+  function buldVenv(){
+    echo "bulding venv ..."
+    python3 -m venv env
+  }
+  echo "manager Venv"
+  buldVenv || installVenv 
+}
+function help(){
+  echo "Test help app "
+}
 function Main() {
-  echo "--------------- Menu App ---------------"
-  createdata
+  	while true 
+		do
+			echo "--------------- Menu App ---------------"
+			echo "1- manager Venv"
+			echo "h - help"
+			read -p "select in menu: " Selectmenu
+			clear
+			#Checking if variable is empty
+			if test -z "$Selectmenu"; then
+				echo "\$ input is null. input => ($Selectmenu)"
+			else
+				if [[ $Selectmenu =~ ^[0-9]+$ ]]; then
+					#echo "${Selectmenu} is a number"
+					if [ $Selectmenu == 1 ]; then
+						managerVenv
+          fi
+				else
+					#echo "${NUM} is not a number"
+					if [ "$Selectmenu" = "h" ] || [ "$Selectmenu" = "h" ]; then
+						help
+					fi
+				fi
+			fi 
+	# We can press Ctrl + C to exit the script
+	done 
 }
 # run sudo app
 if [ $EUID != 0 ]; then
@@ -38,6 +77,7 @@ else
     echo "run command => chmod +x ./$me"
   else
     # run app
+    createdata
     Main
   fi
 fi
