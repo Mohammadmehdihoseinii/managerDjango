@@ -9,8 +9,6 @@ function createdata(){
       echo "File not found!"
     else
       echo "app = 'MDjango v1'" > /$DIR/DB_MDjango/DB_MDjango.py
-      echo "" > /$DIR/DB_MDjango/requirements.py
-      
     fi
   }
   function createFolder() {
@@ -56,33 +54,84 @@ function managerVenv(){
   }
   buldVenv || installVenv
 }
+
+function requirements(){
+  function buldrequirements(){
+    echo "" > /$DIR/DB_MDjango/requirements.txt
+  }
+  function installrequirements(){
+    managerVenv
+    #update pip
+    python -m pip install --upgrade pip
+    pip install --upgrade --force-reinstall -r /$DIR/DB_MDjango/requirements.txt
+  }
+  function backuprequirements(){
+    pip3 freeze > /$DIR/DB_MDjango/requirements.txt || pip freeze > /$DIR/DB_MDjango/requirements.txt 
+    
+  }
+  while true 
+		do
+			echo "--------------- Menu requirements ---------------"
+      echo "1- buld requirements"
+      echo "2- install requirements"
+      echo "2- backup requirements"
+      echo "b- back"
+
+      read -p "select in menu: " Selectmenu
+			clear
+			#Checking if variable is empty
+			if test -z "$Selectmenu"; then
+				echo "\$ input is null. input => ($Selectmenu)"
+			else
+				if [[ $Selectmenu =~ ^[0-9]+$ ]]; then
+					#echo "${Selectmenu} is a number"
+					if [ $Selectmenu == 1 ]; then
+						buldrequirements
+          elif [ $Selectmenu == 2 ]; then
+						installrequirements
+          elif [ $Selectmenu == 3 ]; then
+						backuprequirements
+          fi
+				else
+					#echo "${NUM} is not a number"
+					if [ "$Selectmenu" = "b" ] || [ "$Selectmenu" = "B" ]; then
+						ret
+					fi
+				fi
+      fi
+  done  
+  
+}
 function help(){
   echo "Test help app "
 }
 function Main() {
-	while true 
-	do
-		echo "--------------- Menu App ---------------"
-		echo "1- manager Venv"
-		echo "h - help"
-		read -p "select in menu: " Selectmenu
-		clear
-		#Checking if variable is empty
-		if test -z "$Selectmenu"; then
-			echo "\$ input is null. input => ($Selectmenu)"
-		else
-			if [[ $Selectmenu =~ ^[0-9]+$ ]]; then
-				#echo "${Selectmenu} is a number"
-				if [ $Selectmenu == 1 ]; then
-					managerVenv
-          			fi
+  while true 
+		do
+			echo "--------------- Menu App ---------------"
+			echo "1- manager Venv"
+      echo "2- manager requirements"
+			echo "h - help"
+			read -p "select in menu: " Selectmenu
+			clear
+			#Checking if variable is empty
+			if test -z "$Selectmenu"; then
+				echo "\$ input is null. input => ($Selectmenu)"
 			else
-				#echo "${NUM} is not a number"
-				if [ "$Selectmenu" = "h" ] || [ "$Selectmenu" = "h" ]; then
-					help
+				if [[ $Selectmenu =~ ^[0-9]+$ ]]; then
+					#echo "${Selectmenu} is a number"
+					if [ $Selectmenu == 1 ]; then
+						managerVenv
+          elif [ $Selectmenu == 2 ]; then
+						requirements
+          fi
+				else
+					#echo "${NUM} is not a number"
+					if [ "$Selectmenu" = "h" ] || [ "$Selectmenu" = "h" ]; then
+						break
+					fi
 				fi
-			fi
-		fi 
+			fi 
 	# We can press Ctrl + C to exit the script
 	done 
 }
