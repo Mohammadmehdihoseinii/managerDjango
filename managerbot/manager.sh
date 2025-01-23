@@ -1,13 +1,17 @@
 #! /bin/bash
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 requirementsFile=/$DIR/DB_MDjango/requirements.txt
+# var in app
+declare -A Apps=(
+	[0]=UserApp
+	)
 
 Username_Django=Username
 password_Django=password
 Email_Django=Email@gmail.com
 name_db=namedb
-
 Venv_chack=$false
+
 function createdata(){
   function createtext() {
     if [ -f "/$DIR/DB_MDjango/DB_MDjango.py" ] 
@@ -73,7 +77,7 @@ function requirements(){
   }
   while true 
 		do
-			echo "--------------- Menu requirements ---------------"
+			echo "--------------- manager requirements ---------------"
       echo "1- buld requirements"
       echo "2- install requirements"
       echo "3- backup requirements"
@@ -111,11 +115,11 @@ function django(){
   }
   function buldingdjango(){
     read -p "name site:" name
-    django-admin startproject $name || installdjango
+    django-admin startproject $name 
   }
   function Createapp(){
     read -p "name app:" nameapp
-    python ./manage.py startapp $nameapp || buldingdjango
+    python ./manage.py startapp $nameapp 
   }
   function createsuperuser(){
     echo "create super user ..."
@@ -125,7 +129,7 @@ function django(){
   managerVenv
   while true 
 		do
-			echo "--------------- Menu Django ---------------"
+			echo "--------------- manager Django ---------------"
       echo "1- install Django"
       echo "2- bulding Django"
       echo "3- create app Django"
@@ -142,9 +146,9 @@ function django(){
 					if [ $Selectmenu == 1 ]; then
 						installdjango
           elif [ $Selectmenu == 2 ]; then
-						buldingdjango 
+						buldingdjango || installdjango
           elif [ $Selectmenu == 3 ]; then
-						Createapp
+						Createapp || buldingdjango
           elif [ $Selectmenu == 4 ]; then
             createsuperuser || buldingdjango
           fi
@@ -160,7 +164,93 @@ function django(){
 }
 
 function Database(){
+  function installpostgresDatabase(){
+    echo "install postgres-17 Database"
+    sudo dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/F-41-x86_64/pgdg-fedora-repo-latest.noarch.rpm
+    sudo dnf install -y postgresql17-server
+    sudo /usr/pgsql-17/bin/postgresql-17-setup initdb
+    sudo systemctl enable postgresql-17
+    sudo systemctl start postgresql-17
+  }
+  function CreateupdateDatabase(){
+    echo "Create/update Database"
 
+    for key in "${!Apps[@]}"
+      do
+      python ./manage.py makemigrations ${Apps[$key]}
+    done
+    for key in "${!Apps[@]}"
+      do
+      python ./manage.py migrate ${Apps[$key]}
+    done
+    python ./manage.py makemigrations
+    python ./manage.py migrate
+  }
+  function resetDatabase(){
+    removeFolderDatabase
+    echo "rest Database ..."
+    sudo -u postgres psql -c "drop database IF EXISTS '$name_db'"
+    sudo -u postgres psql -c "CREATE DATABASE '$name_db'"
+
+    CreateupdateDatabase
+    createsuperuser
+  }
+  function removeFolderDatabase(){
+    echo "Remobve migrations and __pycache__ folder"
+
+    for key in "${!Apps[@]}"
+      do
+      if [ -d "./${Apps[$key]}/migrations" ] ; then
+        sudo rm -r ./${Apps[$key]}/migrations
+      else
+        echo "App ${Apps[$key]} Not migrations"
+      fi
+      if [ -d "./${Apps[$key]}/__pycache__" ] ; then
+        sudo rm -r ./${Apps[$key]}/__pycache__
+      else
+        echo "App ${Apps[$key]} Not __pycache__"
+      fi
+    done
+  }
+  function createsuperuser(){
+    echo "create super user ..."
+    echo "from django.contrib.auth import get_user_model;User=get_user_model();Adminiser=User.objects.create_superuser('$Username_Django', '$Email_Django', '$password_Django');" | python manage.py shell
+  }
+
+  managerVenv
+  while true 
+		do
+			echo "--------------- manager Database ---------------"
+      echo "1- install Database"
+      echo "2- Create/update Database"
+      echo "3- reset Database"
+      echo "4- create super user"
+      echo "b- back"
+      read -p "select in menu: " Selectmenu
+			clear
+			#Checking if variable is empty
+			if test -z "$Selectmenu"; then
+				echo "\$ input is null. input => ($Selectmenu)"
+			else
+				if [[ $Selectmenu =~ ^[0-9]+$ ]]; then
+					#echo "${Selectmenu} is a number"
+					if [ $Selectmenu == 1 ]; then
+						installpostgresDatabase
+          elif [ $Selectmenu == 2 ]; then
+						CreateupdateDatabase
+          elif [ $Selectmenu == 3 ]; then
+						resetDatabase
+          elif [ $Selectmenu == 4 ]; then
+            createsuperuser
+          fi
+				else
+					#echo "${NUM} is not a number"
+					if [ "$Selectmenu" = "b" ] || [ "$Selectmenu" = "B" ]; then
+						ret
+					fi
+				fi
+      fi
+  done 
 }
 function help(){
   echo "Test help app "
